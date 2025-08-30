@@ -185,8 +185,9 @@ export function AllStudentsTable() {
 
   useEffect(() => {
     applyFilters(allStudents, filters);
-    setCurrentPage(1);
   }, [allStudents, filters]);
+
+
 
   const handleStatusChange = async (studentId: number, newStatus: string) => {
     try {
@@ -321,14 +322,16 @@ export function AllStudentsTable() {
           >
             <Avatar className="h-10 w-10">
               <AvatarImage
-                src={
-                  student.profile_photo || `/placeholder.svg?height=40&width=40`
-                }
+                src={student.profile_photo}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
               <AvatarFallback>
                 {getInitials(student.fname, student.lname)}
               </AvatarFallback>
             </Avatar>
+
             <div>
               <div className="font-medium">
                 {[student.fname, student.mname, student.lname]

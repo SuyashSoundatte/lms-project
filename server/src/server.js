@@ -28,10 +28,11 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        "https://dkte.sanisoftinfotech.com",
         "http://localhost:5173",
         "http://localhost:4173",
-        "https://dkte-academy-ichalkaranji.netlify.app",
+        "https://lms.nullpointers.me",
+        "https://lms-project-black.vercel.app",
+        "https://lms-project-suyash-soundattes-projects.vercel.app"
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);

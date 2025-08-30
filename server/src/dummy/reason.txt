@@ -1,0 +1,3 @@
+this dummy folder we created for parent portal beacause the student data is not partial for that reason we created dummy tables inside the db and using that 
+
+so for that reason this middlewares, controllers, routes created in future when we get full data we will merge this in main controllers, middlewares 

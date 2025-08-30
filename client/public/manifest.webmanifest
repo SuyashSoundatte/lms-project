@@ -1,0 +1,21 @@
+{
+  "name": "DKTE ACADEMY",
+  "short_name": "DKTE",
+  "description": "A short description of my app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#317EFB",
+  "icons": [
+    {
+      "src": "/icons/dkteIcon192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/dkte_Icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

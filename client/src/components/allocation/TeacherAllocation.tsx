@@ -210,7 +210,7 @@ export function TeacherAllocation() {
     // } finally {
     //   setIsAllocating(false)
     // }
-    console.log("deallocate teachers")
+    // console.log("deallocate teachers")
   }
 
   if (isLoading) {

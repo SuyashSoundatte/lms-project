@@ -71,7 +71,7 @@ export function StudentAllocation() {
     try {
       setIsLoading(true);
       const response = await getAllocatedStudents();
-      console.log(response);
+      // console.log(response);
       if (response.data) {
         setAllAllocatedStudents(response.data);
         toast.success(`Loaded ${response.data.length} allocated students`);

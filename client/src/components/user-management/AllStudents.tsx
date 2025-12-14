@@ -218,20 +218,20 @@ export function AllStudents() {
     return `${fname[0]}${lname[0]}`.toUpperCase()
   }
 
-  const handleStatusChange = (studentId: number, newStatus: string) => {
-    console.log(`Changing status of student ${studentId} to ${newStatus}`)
-    // Implement status change logic
-  }
+  // const handleStatusChange = (studentId: number, newStatus: string) => {
+  //   // console.log(`Changing status of student ${studentId} to ${newStatus}`)
+  //   // Implement status change logic
+  // }
 
-  const handleDeleteStudent = (studentId: number) => {
-    console.log(`Deleting student ${studentId}`)
-    // Implement delete logic with confirmation
-  }
+  // const handleDeleteStudent = (studentId: number) => {
+  //   // console.log(`Deleting student ${studentId}`)
+  //   // Implement delete logic with confirmation
+  // }
 
-  const exportStudents = () => {
-    console.log("Exporting students data")
-    // Implement export functionality
-  }
+  // const exportStudents = () => {
+  //   // console.log("Exporting students data")
+  //   // Implement export functionality
+  // }
 
   const standards = [...new Set(students.map((student) => student.std))].sort()
   const divisions = [...new Set(students.map((student) => student.div))].sort()
@@ -248,7 +248,7 @@ export function AllStudents() {
           <p className="text-muted-foreground">Manage all registered students and their information</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={exportStudents} variant="outline">
+          <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
@@ -502,18 +502,18 @@ export function AllStudents() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {student.status === "active" ? (
-                      <DropdownMenuItem onClick={() => handleStatusChange(student.student_id, "inactive")}>
+                      <DropdownMenuItem >
                         <UserX className="mr-2 h-4 w-4" />
                         Mark Inactive
                       </DropdownMenuItem>
                     ) : (
-                      <DropdownMenuItem onClick={() => handleStatusChange(student.student_id, "active")}>
+                      <DropdownMenuItem >
                         <UserCheck className="mr-2 h-4 w-4" />
                         Mark Active
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteStudent(student.student_id)}>
+                    <DropdownMenuItem className="text-red-600">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete Student
                     </DropdownMenuItem>

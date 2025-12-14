@@ -68,7 +68,7 @@ export const getAllMentors = async (): Promise<getAllUserResponse> => {
     requiresAuth: true,
   });
 
-  console.log("response", response);
+  // console.log("response", response);
   return response;
 };
 
@@ -92,7 +92,7 @@ export const getAllocatedStudents =
       requiresAuth: true,
     });
 
-    console.log("allocated students", response);
+    // console.log("allocated students", response);
     // console.log("response", response);
     return response;
   };

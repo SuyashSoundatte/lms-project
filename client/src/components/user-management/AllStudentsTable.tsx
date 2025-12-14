@@ -189,10 +189,10 @@ export function AllStudentsTable() {
 
 
 
-  const handleStatusChange = async (studentId: number, newStatus: string) => {
+  const handleStatusChange = async () => {
     try {
       setError(null);
-      console.log(studentId, newStatus);
+      // console.log(studentId, newStatus);
       setSuccess(`Student status updated successfully`);
       fetchStudents();
       setTimeout(() => setSuccess(null), 3000);
@@ -203,7 +203,7 @@ export function AllStudentsTable() {
     }
   };
 
-  const handleDeleteStudent = async (studentId: number) => {
+  const handleDeleteStudent = async () => {
     if (
       !confirm(
         "Are you sure you want to delete this student? This action cannot be undone."
@@ -214,7 +214,7 @@ export function AllStudentsTable() {
 
     try {
       setError(null);
-      console.log(studentId);
+      // console.log(studentId);
       setSuccess("Student deleted successfully");
       fetchStudents();
       setTimeout(() => setSuccess(null), 3000);
@@ -437,14 +437,14 @@ export function AllStudentsTable() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => handleStatusChange(student.student_id, "active")}
+                onClick={() => handleStatusChange()}
               >
                 <UserCheck className="mr-2 h-4 w-4" />
                 Mark Active
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() =>
-                  handleStatusChange(student.student_id, "inactive")
+                  handleStatusChange()
                 }
               >
                 <UserX className="mr-2 h-4 w-4" />
@@ -453,7 +453,7 @@ export function AllStudentsTable() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={() => handleDeleteStudent(student.student_id)}
+                onClick={() => handleDeleteStudent()}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Student

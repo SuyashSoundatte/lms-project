@@ -11,7 +11,7 @@ const updateSW = registerSW({
     }
   },
   onOfflineReady() {
-    console.log("PWA is ready for offline use");
+    // console.log("PWA is ready for offline use");
   },
 });
 

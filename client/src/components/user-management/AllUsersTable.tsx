@@ -124,9 +124,9 @@ export function AllUsersTable() {
     setCurrentPage(1);
   }, [allUsers, filters, searchTerm]);
 
-  const handleStatusChange = async (userId: number, newStatus: string) => {
+  const handleStatusChange = async () => {
     try {
-      console.log(userId, newStatus);
+      // console.log(userId, newStatus);
       setError(null);
       // await updateUserStatus(userId, newStatus);
       setSuccess("User status updated successfully");
@@ -139,7 +139,7 @@ export function AllUsersTable() {
     }
   };
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleDeleteUser = async () => {
     if (
       !confirm(
         "Are you sure you want to delete this user? This action cannot be undone."
@@ -147,7 +147,7 @@ export function AllUsersTable() {
     )
       return;
     try {
-      console.log(userId);
+      // console.log(userId);
       setError(null);
       // await deleteUser(userId);
       setSuccess("User deleted successfully");
@@ -288,14 +288,12 @@ export function AllUsersTable() {
                 Edit User
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleStatusChange(user.user_id, "active")}
-              >
+              <DropdownMenuItem>
                 <UserCheck className="mr-2 h-4 w-4" />
                 Activate
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleStatusChange(user.user_id, "inactive")}
+                onClick={() => handleStatusChange()}
               >
                 <UserX className="mr-2 h-4 w-4" />
                 Deactivate
@@ -303,7 +301,7 @@ export function AllUsersTable() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={() => handleDeleteUser(user.user_id)}
+                onClick={() => handleDeleteUser()}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete User

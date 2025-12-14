@@ -1,0 +1,9 @@
+services:
+  backend:
+    image: suyashsoundatte/lms-backend:latest
+    container_name: lms-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: always

@@ -14,7 +14,7 @@ const executeQuery = async (query, params) => {
 
 const assignTeacherSubjects = asyncHandler(async (req, res) => {
     const { userId, subjects, std, div } = req.body;
-
+console.log("xcvbnm,.dfghjkertyui")
     try {
         const pool = await poolPromise;
         const result = await pool.request()
@@ -152,7 +152,7 @@ const getTeacherByStd = asyncHandler(async (req, res) => {
 
 const getTeacherByAllocation = asyncHandler(async (req, res) => {
     const { std, div, subject } = req.body;
-
+console.log("sdfghjklertyuiofghjkhnj")
     if (!std || !div || !subject) {
         throw new ApiError("Standard, division, and subject are required", 400);
     }

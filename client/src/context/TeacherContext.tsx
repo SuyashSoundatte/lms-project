@@ -45,6 +45,8 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         requiresAuth: true,
       });
 
+      console.log(response);
+
       const classList = response.data || [];
       setClasses(classList);
       localStorage.setItem("teacherClasses", JSON.stringify(classList));

@@ -18,7 +18,7 @@ const createUser = asyncHandler(async (req, res) => {
     phone,
     role,
   } = req.body;
-
+  console.log("hekhbjnsdfghjk")
   try {
     // const hashedPassword = await hashPassword(password);
 
@@ -39,6 +39,8 @@ const createUser = asyncHandler(async (req, res) => {
       .execute("sp_creation");
 
     const response = result.recordset[0];
+
+    console.log(response);
 
     if (response.id === -1) {
       throw new ApiError(response.message, 400);

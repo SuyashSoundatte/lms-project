@@ -17,9 +17,10 @@ const executeQuery = async (query, params) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    throw new ApiError(400, "Please provide email and password");
-  }
+  // if (email!="admin@gmail.com" || password!='123456789') {
+  //   throw new ApiError(400, "Please provide email and password");
+  // }
+  // console.log(email);
 
   const pool = await poolPromise;
 
@@ -40,6 +41,15 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user.password !== password) {
       throw new ApiError(401, "Invalid credentials");
     }
+
+    console.log(user);
+
+  // const user = {
+  //   id: 1,
+  //   role: 'SuperAdmin',
+  //   email: 'admin@gmail.com',
+  //   password: '123456789'
+  // }
 
     const token = jwt.sign(
       {
@@ -209,6 +219,7 @@ const getAllMentor = asyncHandler(async (req, res) => {
 const GetUserDataByRole = asyncHandler(async (req, res) => {
   const { userId, role } = req.params;
 
+  console.log("asdfghjkdrghjktrfghukk")
   try {
     const pool = await poolPromise;
     const result = await pool
@@ -217,6 +228,8 @@ const GetUserDataByRole = asyncHandler(async (req, res) => {
       .input("user_id", userId)
       .input("role", role)
       .execute("sp_getData");
+
+      console.log(result.recordset[0]);
 
     if (result.recordset[0].status === -1) {
       throw new ApiError(400, result.recordset[0].message);

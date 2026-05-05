@@ -1626,3 +1626,381 @@ BEGIN
             ERROR_LINE() AS ErrorLine;
     END CATCH
 END
+
+ALTER   PROCEDURE [dbo].[sp_getData]
+    @Action VARCHAR(100),
+    @user_id INT = NULL,
+    @role VARCHAR(50) = NULL,
+    @teacherId INT = NULL,
+    @std VARCHAR(20) = NULL,
+    @div VARCHAR(10) = NULL,
+    @student_id INT = NULL,
+    @class_id INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- ===========================
+        -- USERS
+        -- ===========================
+        IF @Action = 'get_all_users'
+        BEGIN
+            SELECT 1 as [status], 'Users retrieved successfully' as [message], 
+                   user_id, fname, mname, lname, address, gender, dob, email, phone, role
+            FROM m_users;
+        END
+        
+        ELSE IF @Action = 'get_user_by_id'
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM m_users WHERE user_id = @user_id)
+            BEGIN
+                SELECT -1 as [status], 'User not found' as [message];
+                RETURN;
+            END
+
+            SELECT 1 as [status], 'User retrieved successfully' as [message], 
+                   user_id, fname, mname, lname, address, gender, dob, email, phone, role
+            FROM m_users 
+            WHERE user_id = @user_id;
+        END
+
+        ELSE IF @Action = 'get_all_mentors'
+        BEGIN
+            SELECT 1 as [status], 'Mentors retrieved successfully' as [message], 
+                   u.user_id, u.fname, u.mname, u.lname, u.email, u.phone, u.role, u.gender,
+                   ma.std, ma.div, ma.m_allocation_id AS mentor_allocation_id
+            FROM m_users u
+            LEFT JOIN tdl_Mentor_Allocate ma ON u.user_id = ma.user_id
+            WHERE u.role = 'Mentor'
+            ORDER BY u.lname, u.fname;
+        END
+
+        ELSE IF @Action = 'get_user_data_by_role'
+        BEGIN
+            -- Using a temp pattern since multiple columns could match
+            IF @role = 'Teacher'
+            BEGIN
+                SELECT 1 as [status], 'User data retrieved' as [message],
+                    t_allocation_id AS allocation_id, std, div, subjects
+                FROM tdl_Teacher_Allocate WHERE user_id = @user_id;
+            END
+            ELSE IF @role = 'ClassTeacher'
+            BEGIN
+                SELECT 1 as [status], 'User data retrieved' as [message],
+                    ct_allocation_id AS allocation_id, std, div
+                FROM tdl_ClassTeacher_Allocate WHERE user_id = @user_id;
+            END
+            ELSE IF @role = 'Mentor'
+            BEGIN
+                SELECT 1 as [status], 'User data retrieved' as [message],
+                    m_allocation_id AS allocation_id, std, div
+                FROM tdl_Mentor_Allocate WHERE user_id = @user_id;
+            END
+            ELSE
+            BEGIN
+                SELECT -1 as [status], 'Invalid role data combination or unrecognized role' as [message];
+            END
+        END
+
+        ELSE IF @Action = 'get_teacher_by_id'
+        BEGIN
+            SELECT 1 as [status], 'Teacher retrieved successfully' as [message],
+                   u.user_id, u.email, u.fname, u.mname, u.lname, u.role, u.phone, u.gender, u.address, u.dob,
+                   ta.subjects, ta.std, ta.div
+            FROM m_users u
+            LEFT JOIN tdl_Teacher_Allocate ta ON u.user_id = ta.user_id
+            WHERE u.role = 'Teacher' AND u.user_id = @teacherId;
+        END
+
+        ELSE IF @Action = 'get_teachers_by_std'
+        BEGIN
+            SELECT 1 as [status], 'Teachers retrieved successfully' as [message],
+                   u.user_id, u.fname, u.mname, u.lname, u.email, u.phone,
+                   ta.subjects, ta.std, ta.div
+            FROM m_users u
+            JOIN tdl_Teacher_Allocate ta ON u.user_id = ta.user_id
+            WHERE u.role = 'Teacher' AND ta.std = @std
+            ORDER BY u.lname, u.fname;
+        END
+
+        -- ===========================
+        -- STUDENTS
+        -- ===========================
+        ELSE IF @Action = 'get_all_students'
+        BEGIN
+            SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students;
+        END
+
+        ELSE IF @Action = 'get_students_by_std'
+        BEGIN
+            SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students
+            WHERE std = @std;
+        END
+
+        ELSE IF @Action = 'get_allocated_students'
+        BEGIN
+            SELECT 1 as [status], 'Allocated students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, gender, roll_no, std, div, profile_photo
+            FROM m_students
+            WHERE div IS NOT NULL
+            ORDER BY std, div, roll_no;
+        END
+
+        ELSE IF @Action = 'get_student_by_id'
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM m_students WHERE student_id = @student_id)
+            BEGIN
+                SELECT -1 as [status], 'Student not found' as [message];
+                RETURN;
+            END
+            
+            SELECT 1 as [status], 'Student retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students
+            WHERE student_id = @student_id;
+        END
+
+        ELSE IF @Action = 'get_students_by_div'
+        BEGIN
+            SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students
+            WHERE div = @div;
+        END
+
+        ELSE IF @Action = 'get_students_by_class_or_stddiv'
+        BEGIN
+            IF @class_id IS NOT NULL
+            BEGIN
+                SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                       s.student_id, s.fname, s.mname, s.lname, s.email, s.father_phone, s.mother_phone,
+                       s.father_name, s.mother_name, s.roll_no, s.profile_photo, c.std, c.div
+                FROM m_students s
+                JOIN m_class c ON s.std = c.std AND s.div = c.div
+                WHERE c.class_id = @class_id
+                ORDER BY s.roll_no;
+            END
+            ELSE
+            BEGIN
+                SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                       student_id, fname, mname, lname, email, father_phone, mother_phone,
+                       father_name, mother_name, roll_no, profile_photo, std, div
+                FROM m_students
+                WHERE std = @std AND div = @div
+                ORDER BY roll_no;
+            END
+        END
+        
+        ELSE
+        BEGIN
+            -- Catch any unsupported actions
+            SELECT -1 as [status], 'Invalid Action parameter for sp_getData' as [message];
+        END
+
+    END TRY
+    BEGIN CATCH
+        -- In case of SQL errors, return the error message natively 
+        SELECT -1 as [status], ERROR_MESSAGE() as [message];
+    END CATCH
+ENDALTER   PROCEDURE [dbo].[sp_getData]
+    @Action VARCHAR(100),
+    @user_id INT = NULL,
+    @role VARCHAR(50) = NULL,
+    @teacherId INT = NULL,
+    @std VARCHAR(20) = NULL,
+    @div VARCHAR(10) = NULL,
+    @student_id INT = NULL,
+    @class_id INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- ===========================
+        -- USERS
+        -- ===========================
+        IF @Action = 'get_all_users'
+        BEGIN
+            SELECT 1 as [status], 'Users retrieved successfully' as [message], 
+                   user_id, fname, mname, lname, address, gender, dob, email, phone, role
+            FROM m_users;
+        END
+        
+        ELSE IF @Action = 'get_user_by_id'
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM m_users WHERE user_id = @user_id)
+            BEGIN
+                SELECT -1 as [status], 'User not found' as [message];
+                RETURN;
+            END
+
+            SELECT 1 as [status], 'User retrieved successfully' as [message], 
+                   user_id, fname, mname, lname, address, gender, dob, email, phone, role
+            FROM m_users 
+            WHERE user_id = @user_id;
+        END
+
+        ELSE IF @Action = 'get_all_mentors'
+        BEGIN
+            SELECT 1 as [status], 'Mentors retrieved successfully' as [message], 
+                   u.user_id, u.fname, u.mname, u.lname, u.email, u.phone, u.role, u.gender,
+                   ma.std, ma.div, ma.m_allocation_id AS mentor_allocation_id
+            FROM m_users u
+            LEFT JOIN tdl_Mentor_Allocate ma ON u.user_id = ma.user_id
+            WHERE u.role = 'Mentor'
+            ORDER BY u.lname, u.fname;
+        END
+
+        ELSE IF @Action = 'get_user_data_by_role'
+        BEGIN
+            -- Using a temp pattern since multiple columns could match
+            IF @role = 'Teacher'
+            BEGIN
+                SELECT 1 as [status], 'User data retrieved' as [message],
+                    t_allocation_id AS allocation_id, std, div, subjects
+                FROM tdl_Teacher_Allocate WHERE user_id = @user_id;
+            END
+            ELSE IF @role = 'ClassTeacher'
+            BEGIN
+                SELECT 1 as [status], 'User data retrieved' as [message],
+                    ct_allocation_id AS allocation_id, std, div
+                FROM tdl_ClassTeacher_Allocate WHERE user_id = @user_id;
+            END
+            ELSE IF @role = 'Mentor'
+            BEGIN
+                SELECT 1 as [status], 'User data retrieved' as [message],
+                    m_allocation_id AS allocation_id, std, div
+                FROM tdl_Mentor_Allocate WHERE user_id = @user_id;
+            END
+            ELSE
+            BEGIN
+                SELECT -1 as [status], 'Invalid role data combination or unrecognized role' as [message];
+            END
+        END
+
+        ELSE IF @Action = 'get_teacher_by_id'
+        BEGIN
+            SELECT 1 as [status], 'Teacher retrieved successfully' as [message],
+                   u.user_id, u.email, u.fname, u.mname, u.lname, u.role, u.phone, u.gender, u.address, u.dob,
+                   ta.subjects, ta.std, ta.div
+            FROM m_users u
+            LEFT JOIN tdl_Teacher_Allocate ta ON u.user_id = ta.user_id
+            WHERE u.role = 'Teacher' AND u.user_id = @teacherId;
+        END
+
+        ELSE IF @Action = 'get_teachers_by_std'
+        BEGIN
+            SELECT 1 as [status], 'Teachers retrieved successfully' as [message],
+                   u.user_id, u.fname, u.mname, u.lname, u.email, u.phone,
+                   ta.subjects, ta.std, ta.div
+            FROM m_users u
+            JOIN tdl_Teacher_Allocate ta ON u.user_id = ta.user_id
+            WHERE u.role = 'Teacher' AND ta.std = @std
+            ORDER BY u.lname, u.fname;
+        END
+
+        -- ===========================
+        -- STUDENTS
+        -- ===========================
+        ELSE IF @Action = 'get_all_students'
+        BEGIN
+            SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students;
+        END
+
+        ELSE IF @Action = 'get_students_by_std'
+        BEGIN
+            SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students
+            WHERE std = @std;
+        END
+
+        ELSE IF @Action = 'get_allocated_students'
+        BEGIN
+            SELECT 1 as [status], 'Allocated students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, gender, roll_no, std, div, profile_photo
+            FROM m_students
+            WHERE div IS NOT NULL
+            ORDER BY std, div, roll_no;
+        END
+
+        ELSE IF @Action = 'get_student_by_id'
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM m_students WHERE student_id = @student_id)
+            BEGIN
+                SELECT -1 as [status], 'Student not found' as [message];
+                RETURN;
+            END
+            
+            SELECT 1 as [status], 'Student retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students
+            WHERE student_id = @student_id;
+        END
+
+        ELSE IF @Action = 'get_students_by_div'
+        BEGIN
+            SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                   student_id, fname, mname, lname, address, gender, dob, email, 
+                   father_name, father_occu, mother_name, mother_occu, father_phone, mother_phone, 
+                   student_cast, cast_group, course, addmission_date, profile_photo, div, std, roll_no
+            FROM m_students
+            WHERE div = @div;
+        END
+
+        ELSE IF @Action = 'get_students_by_class_or_stddiv'
+        BEGIN
+            IF @class_id IS NOT NULL
+            BEGIN
+                SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                       s.student_id, s.fname, s.mname, s.lname, s.email, s.father_phone, s.mother_phone,
+                       s.father_name, s.mother_name, s.roll_no, s.profile_photo, c.std, c.div
+                FROM m_students s
+                JOIN m_class c ON s.std = c.std AND s.div = c.div
+                WHERE c.class_id = @class_id
+                ORDER BY s.roll_no;
+            END
+            ELSE
+            BEGIN
+                SELECT 1 as [status], 'Students retrieved successfully' as [message],
+                       student_id, fname, mname, lname, email, father_phone, mother_phone,
+                       father_name, mother_name, roll_no, profile_photo, std, div
+                FROM m_students
+                WHERE std = @std AND div = @div
+                ORDER BY roll_no;
+            END
+        END
+        
+        ELSE
+        BEGIN
+            -- Catch any unsupported actions
+            SELECT -1 as [status], 'Invalid Action parameter for sp_getData' as [message];
+        END
+
+    END TRY
+    BEGIN CATCH
+        -- In case of SQL errors, return the error message natively 
+        SELECT -1 as [status], ERROR_MESSAGE() as [message];
+    END CATCH
+END

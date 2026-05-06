@@ -73,6 +73,7 @@ export const apiRequest = async <T = any>({
     }
 
     const response = await api.request<ApiResponse<T>>(config);
+    console.log(response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

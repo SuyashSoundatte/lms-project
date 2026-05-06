@@ -26,6 +26,8 @@ interface TeacherContextType {
 
 const TeacherContext = createContext<TeacherContextType | undefined>(undefined);
 
+const CLASS_BOUND_ROLES = new Set(["Teacher", "ClassTeacher", "Mentor"]);
+
 export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, userType } = useAuthContext();
   const [classes, setClasses] = useState<ClassData[]>([]);
@@ -33,7 +35,18 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [error, setError] = useState<string | null>(null);
 
   const fetchClasses = useCallback(async () => {
-    if (!user || userType !== "staff") return;
+    if (!user || userType !== "staff") {
+      setClasses([]);
+      setLoading(false);
+      return;
+    }
+
+    if (!CLASS_BOUND_ROLES.has(user.role)) {
+      setClasses([]);
+      localStorage.removeItem("teacherClasses");
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -45,13 +58,11 @@ export const TeacherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         requiresAuth: true,
       });
 
-      console.log(response);
-
       const classList = response.data || [];
       setClasses(classList);
       localStorage.setItem("teacherClasses", JSON.stringify(classList));
     } catch (err: any) {
-      // console.error(err);
+      console.error(err);
       setError(err.message || "Failed to fetch class data");
     } finally {
       setLoading(false);

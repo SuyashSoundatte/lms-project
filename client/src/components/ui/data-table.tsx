@@ -27,6 +27,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onSelectionChange?: (selectedRowIds: string[]) => void
+  getRowId?: (originalRow: TData, index: number) => string
   searchPlaceholder?: string
   title?: string
 }
@@ -35,6 +36,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   onSelectionChange,
+  getRowId,
   searchPlaceholder = "Search...",
   title,
 }: DataTableProps<TData, TValue>) {
@@ -54,6 +56,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    getRowId,
     state: {
       sorting,
       columnFilters,

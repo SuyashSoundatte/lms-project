@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -13,10 +13,18 @@ import {
   getAllocatedTeachers,
   type User,
 } from "@/services/GetAll/getall"
+import { assignTeacherSubjects, deassign } from "@/services/allocate/allocate"
 import { ArrowUpDown, UserCheck, Users, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AllocatedTeacher extends User {
+  teacher_allocation_id?: number
+  allocation_id?: number
+  allocationId?: number
+  teacherAllocationId?: number
+  teacher_allocate_id?: number
+  teacherAllocateId?: number
+  id?: number
   std: string
   div: string
   subjects: string
@@ -27,50 +35,57 @@ export function TeacherAllocation() {
   const [unallocatedTeachers, setUnallocatedTeachers] = useState<User[]>([])
   const [allocatedTeachers, setAllocatedTeachers] = useState<AllocatedTeacher[]>([])
   const [selectedUnallocated, setSelectedUnallocated] = useState<string[]>([])
-  const [_, setSelectedAllocated] = useState<string[]>([])
+  const [selectedAllocated, setSelectedAllocated] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAllocating, setIsAllocating] = useState(false)
 
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchUnallocatedTeachers()
-    fetchAllocatedTeachers()
+  const handleUnallocatedSelectionChange = useCallback((ids: string[]) => {
+    setSelectedUnallocated(ids)
   }, [])
+
+  const handleAllocatedSelectionChange = useCallback((ids: string[]) => {
+    setSelectedAllocated(ids)
+  }, [])
+
+  useEffect(() => {
+    fetchTeacherData()
+  }, [])
+
+  const fetchTeacherData = async () => {
+    setIsLoading(true)
+    await Promise.all([fetchUnallocatedTeachers(), fetchAllocatedTeachers()])
+    setSelectedUnallocated([])
+    setSelectedAllocated([])
+    setIsLoading(false)
+  }
 
   const fetchUnallocatedTeachers = async () => {
     try {
-      setIsLoading(true)
       const response = await getUnallocatedTeachers()
       if (response.status && response.data) {
         setUnallocatedTeachers(response.data)
-        toast.success(`Loaded ${response.data.length} unallocated teachers successfully`)
       } else {
         toast.error(response.message || "Failed to fetch unallocated teachers")
       }
     } catch (error: any) {
       // console.error("Error fetching unallocated teachers:", error)
       toast.error("Failed to fetch unallocated teachers")
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const fetchAllocatedTeachers = async () => {
     try {
-      setIsLoading(true)
       const response = await getAllocatedTeachers()
       if (response.status && response.data) {
         setAllocatedTeachers(response.data  as AllocatedTeacher[])
-        toast.success(`Loaded ${response.data.length} allocated teachers successfully`)
       } else {
         toast.error(response.message || "Failed to fetch allocated teachers")
       }
     } catch (error: any) {
       // console.error("Error fetching allocated teachers:", error)
       toast.error("Failed to fetch allocated teachers")
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -154,63 +169,79 @@ export function TeacherAllocation() {
   ]
 
   const handleAllocate = async (allocationData: any) => {
+    if (selectedUnallocated.length !== 1) {
+      toast.error("Please select one teacher to allocate")
+      return
+    }
+
+    if (!allocationData.subject || !allocationData.standard || !allocationData.division) {
+      toast.error("Please select subject, standard and division")
+      return
+    }
+
     setIsAllocating(true)
     try {
-      const teachersToAllocate = unallocatedTeachers.filter((teacher) =>
-        selectedUnallocated.includes(teacher.user_id.toString()),
+      const teacher = unallocatedTeachers.find((teacher) =>
+        selectedUnallocated.includes(teacher.user_id.toString())
       )
+      if (!teacher) throw new Error("Selected teacher not found")
 
-      const allocatedClass = `${allocationData.standard}-${allocationData.division}`
-      const updatedTeachers: AllocatedTeacher[] = teachersToAllocate.map((teacher) => ({
-        ...teacher,
-        std: allocationData.standard,
-        div: allocationData.division,
-        subjects: allocationData.subject,
-        allocated_class: allocatedClass,
-        allocated_date: new Date().toISOString().split("T")[0],
-      }))
-
-      setAllocatedTeachers((prev) => [...prev, ...updatedTeachers])
-      setUnallocatedTeachers((prev) =>
-        prev.filter((teacher) => !selectedUnallocated.includes(teacher.user_id.toString())),
+      await assignTeacherSubjects(
+        teacher.user_id,
+        allocationData.subject,
+        allocationData.standard,
+        allocationData.division
       )
-      setSelectedUnallocated([])
-
-      toast.success(`Successfully allocated ${updatedTeachers.length} teachers`)
-    } catch (error) {
+      toast.success("Teacher allocated successfully")
+      await fetchTeacherData()
+    } catch (error: any) {
       // console.error("Allocation failed:", error)
-      toast.error("Failed to allocate teachers")
+      toast.error(error.message || "Failed to allocate teacher")
     } finally {
       setIsAllocating(false)
     }
   }
 
+  const getAllocationId = (teacher: AllocatedTeacher) =>
+    teacher.teacher_allocation_id ??
+    teacher.allocation_id ??
+    teacher.allocationId ??
+    teacher.teacherAllocationId ??
+    teacher.teacher_allocate_id ??
+    teacher.teacherAllocateId ??
+    teacher.id
+
+  const getAllocatedRowId = (teacher: AllocatedTeacher) => {
+    const allocationId = getAllocationId(teacher)
+    if (allocationId) return allocationId.toString()
+
+    return `${teacher.user_id}-${teacher.std}-${teacher.div}-${teacher.subjects}`
+  }
+
   const handleDeallocate = async () => {
-    // setIsAllocating(true)
-    // try {
-    //   const teachersToDeallocate = allocatedTeachers.filter((teacher) =>
-    //     selectedAllocated.includes(teacher.user_id.toString()),
-    //   )
+    if (selectedAllocated.length !== 1) {
+      toast.error("Please select one allocated teacher to deallocate")
+      return
+    }
 
-    //   const unallocated = teachersToDeallocate.map((teacher) => {
-    //     const { subjects, a, allocated_date, ...rest } = teacher
-    //     return rest
-    //   })
+    setIsAllocating(true)
+    try {
+      const teacher = allocatedTeachers.find(
+        (teacher) => selectedAllocated[0] === getAllocatedRowId(teacher)
+      )
+      if (!teacher) throw new Error("Selected teacher not found")
 
-    //   setUnallocatedTeachers((prev) => [...prev, ...unallocated])
-    //   setAllocatedTeachers((prev) =>
-    //     prev.filter((teacher) => !selectedAllocated.includes(teacher.user_id.toString())),
-    //   )
-    //   setSelectedAllocated([])
+      const allocationId = getAllocationId(teacher)
+      if (!allocationId) throw new Error("Allocation ID not found for selected teacher")
 
-    //   toast.success(`Successfully deallocated ${unallocated.length} teachers`)
-    // } catch (error) {
-    //   console.error("Deallocation failed:", error)
-    //   toast.error("Failed to deallocate teachers")
-    // } finally {
-    //   setIsAllocating(false)
-    // }
-    // console.log("deallocate teachers")
+      await deassign(allocationId)
+      toast.success("Teacher deallocated successfully")
+      await fetchTeacherData()
+    } catch (error: any) {
+      toast.error(error.message || "Failed to deallocate teacher")
+    } finally {
+      setIsAllocating(false)
+    }
   }
 
   if (isLoading) {
@@ -225,7 +256,7 @@ export function TeacherAllocation() {
   return (
     <div className="space-y-6">
       <AllocationControls
-        selectedCount={selectedUnallocated.length}
+        selectedCount={selectedUnallocated.length + selectedAllocated.length}
         allocationType="teacher"
         onAllocate={handleAllocate}
         onDeallocate={handleDeallocate}
@@ -243,10 +274,11 @@ export function TeacherAllocation() {
             <CardDescription>Teachers not yet assigned to subjects/classes</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <DataTable<User | AllocatedTeacher, unknown>
               columns={createColumns(false)}
               data={unallocatedTeachers}
-              onSelectionChange={setSelectedUnallocated}
+              getRowId={(teacher) => teacher.user_id.toString()}
+              onSelectionChange={handleUnallocatedSelectionChange}
               searchPlaceholder="Search unallocated teachers..."
             />
           </CardContent>
@@ -262,10 +294,11 @@ export function TeacherAllocation() {
             <CardDescription>Teachers assigned to subjects and classes</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <DataTable<User | AllocatedTeacher, unknown>
               columns={createColumns(true)}
               data={allocatedTeachers}
-              onSelectionChange={setSelectedAllocated}
+              getRowId={(teacher) => getAllocatedRowId(teacher as AllocatedTeacher)}
+              onSelectionChange={handleAllocatedSelectionChange}
               searchPlaceholder="Search allocated teachers..."
             />
           </CardContent>

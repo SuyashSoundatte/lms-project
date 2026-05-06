@@ -4,6 +4,25 @@ import ApiResponse from '../config/ApiResponse.js';
 import poolPromise from '../config/dbConnect.js';
 import sql from 'mssql'
 
+const extractAllocationId = (row) => {
+    const directMatch =
+        row.allocation_id ??
+        row.allocationId ??
+        row.teacher_allocation_id ??
+        row.teacherAllocationId ??
+        row.teacher_allocate_id ??
+        row.teacherAllocateId ??
+        row.id;
+
+    if (directMatch != null) return directMatch;
+
+    const inferredKey = Object.keys(row).find((key) => {
+        const normalized = key.toLowerCase();
+        return normalized.includes('allocation') && normalized.includes('id');
+    });
+
+    return inferredKey ? row[inferredKey] : null;
+};
 
 // Get Allocated Teachers
 const getAllocatedTeachers = asyncHandler(async (req, res) => {
@@ -18,9 +37,13 @@ const getAllocatedTeachers = asyncHandler(async (req, res) => {
         if (div) request.input('div', div);
 
         const result = await request.execute('sp_allocation');
+        const normalizedTeachers = result.recordset.map((row) => ({
+            ...row,
+            allocation_id: extractAllocationId(row),
+        }));
 
         res.status(200).json(
-            new ApiResponse(200, result.recordset, "Allocated teachers fetched successfully")
+            new ApiResponse(200, normalizedTeachers, "Allocated teachers fetched successfully")
         );
     } catch (err) {
         console.error("Error in getAllocatedTeachers:", err);
@@ -163,18 +186,20 @@ const getAllocatedStudents = async (req, res) => {
     const result = await pool
       .request()
       .input("Action", sql.NVarChar(100), "allocated_students")
-      .execute("dkte_user1.sp_allocation");
+      .execute("sp_allocation");
 
-    res.status(200).json({
-      success: true,
-      data: result.recordset,
-      message: "Allocated students fetched successfully",
-    });
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        result.recordset,
+        "Allocated students fetched successfully"
+      )
+    );
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    console.error("Error in getAllocatedStudents:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, error.message || "Failed to fetch allocated students")
+    );
   }
 };
 
@@ -184,18 +209,20 @@ const getUnallocatedStudents = async (req, res) => {
     const result = await pool
       .request()
       .input("Action", sql.NVarChar(100), "unallocated_students")
-      .execute("dkte_user1.sp_allocation");
+      .execute("sp_allocation");
 
-    res.status(200).json({
-      success: true,
-      data: result.recordset,
-      message: "Unallocated students fetched successfully",
-    });
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        result.recordset,
+        "Unallocated students fetched successfully"
+      )
+    );
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    console.error("Error in getUnallocatedStudents:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, error.message || "Failed to fetch unallocated students")
+    );
   }
 };
 

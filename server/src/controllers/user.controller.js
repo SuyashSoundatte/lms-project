@@ -218,7 +218,7 @@ const getAllMentor = asyncHandler(async (req, res) => {
 
 const GetUserDataByRole = asyncHandler(async (req, res) => {
   const { userId, role } = req.params;
-
+console.log(userId, role);
   console.log("asdfghjkdrghjktrfghukk")
   try {
     const pool = await poolPromise;

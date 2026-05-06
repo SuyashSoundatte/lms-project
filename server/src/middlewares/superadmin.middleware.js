@@ -11,7 +11,7 @@ const validUser = (req, res, next) => {
     dob: Joi.string()
       .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
       .required(),
-    email: Joi.string().email().required(),
+    email: Joi.string().email({ tlds: { allow: false } }).required(),
     password: Joi.string().min(4).required(),
     phone: Joi.string().required(),
     subjects: Joi.array().items(Joi.string()).optional(), // Assuming an array of subjects for Teacher role
@@ -33,7 +33,7 @@ const validUser = (req, res, next) => {
 
 const validLogin = (req, res, next) => {
   const schema = Joi.object({
-    email: Joi.string().email().required(),
+    email: Joi.string().email({ tlds: { allow: false } }).required(),
     password: Joi.string().min(4).required()
   });
 

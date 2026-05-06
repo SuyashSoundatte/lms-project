@@ -50,6 +50,22 @@ export const assignMentorByStdDiv = async (
   return response;
 };
 
+export const assignTeacherSubjects = async (
+  userId: number,
+  subjects: string,
+  std: string,
+  div: string
+): Promise<ApiResponse<ClassTeacherAssignmentResult>> => {
+  const response = await apiRequest<ClassTeacherAssignmentResult>({
+    method: METHOD.POST,
+    url: "/assignTeacherSubjects",
+    data: { userId, subjects, std, div },
+    requiresAuth: true,
+  });
+
+  return response;
+};
+
 // Function to deallocate class teacher using allocation_id
 export const deassign = async (
   allocationId: number
